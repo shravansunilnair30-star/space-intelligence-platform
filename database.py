@@ -1,7 +1,6 @@
 import sqlite3
 import os
 
-# ✅ Correct DB path (IMPORTANT)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "data", "space_news.db")
 
@@ -21,26 +20,10 @@ def create_table():
         source TEXT,
         content TEXT,
         importance TEXT,
-        topic TEXT
+        topic TEXT,
+        published TEXT
     )
     """)
-
-    conn.commit()
-    conn.close()
-
-
-def ensure_columns():
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute("PRAGMA table_info(articles)")
-    columns = [col[1] for col in cursor.fetchall()]
-
-    if "importance" not in columns:
-        cursor.execute("ALTER TABLE articles ADD COLUMN importance TEXT")
-
-    if "topic" not in columns:
-        cursor.execute("ALTER TABLE articles ADD COLUMN topic TEXT")
 
     conn.commit()
     conn.close()
@@ -50,23 +33,21 @@ def article_exists(title):
     conn = connect_db()
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM articles WHERE title=?", (title,))
+    cursor.execute("SELECT 1 FROM articles WHERE title=?", (title,))
     result = cursor.fetchone()
 
     conn.close()
     return result is not None
 
 
-def save_article(title, link, source, content, importance, topic):
+def save_article(title, link, source, content, importance, topic, published):
     conn = connect_db()
     cursor = conn.cursor()
 
     cursor.execute(
-        "INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?)",
-        (title, link, source, content, importance, topic)
+        "INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (title, link, source, content, importance, topic, published)
     )
-
-    print("Inserted into DB:", title)  # 🔥 debug
 
     conn.commit()
     conn.close()

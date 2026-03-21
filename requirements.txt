@@ -6,3 +6,4 @@ schedule
 newspaper3k
 lxml
 lxml_html_clean
+deep-translator
