@@ -1,0 +1,84 @@
+import streamlit as st
+import sqlite3
+import pandas as pd
+from analyzer import detect_trends
+
+# Page config (ONLY ONCE)
+st.set_page_config(layout="wide")
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "data", "space_news.db")
+
+conn = sqlite3.connect(DB_PATH)
+
+# Load data
+query = "SELECT title, link, source, importance, topic FROM articles"
+df = pd.read_sql(query, conn)
+
+# Title
+st.title("🚀 Space Intelligence Dashboard")
+st.write("### Real-Time Space Industry Insights")
+st.write("App started ✅")
+st.write("Rows in DB:", len(df))
+
+# 🔥 SIDEBAR FILTERS
+st.sidebar.title("Filters")
+
+importance_filter = st.sidebar.selectbox(
+    "Importance",
+    ["All", "HIGH", "LOW"]
+)
+
+topic_filter = st.sidebar.selectbox(
+    "Topic",
+    ["All"] + list(df["topic"].dropna().unique())
+)
+
+# Apply filters
+filtered_df = df.copy()
+
+if importance_filter != "All":
+    filtered_df = filtered_df[filtered_df["importance"] == importance_filter]
+
+if topic_filter != "All":
+    filtered_df = filtered_df[filtered_df["topic"] == topic_filter]
+
+# 🔥 TREND DETECTION (use full dataset)
+st.write("## 📈 Trending Topics")
+
+trends = detect_trends(df)
+
+for key, value in trends.items():
+    st.write(f"{key.upper()} → {value}")
+
+# 🔍 SEARCH
+search = st.text_input("Search news")
+
+if search:
+    filtered_df = filtered_df[
+        filtered_df["title"].str.contains(search, case=False)
+    ]
+
+# Display filtered data
+st.write("## 📰 Filtered News")
+
+for index, row in filtered_df.iterrows():
+
+    if row["importance"] == "HIGH":
+        st.markdown(f"## 🔥 {row['title']}")
+    else:
+        st.markdown(f"## {row['title']}")
+
+    st.write(f"📊 Topic: {row['topic']}")
+    st.write(f"⚡ Importance: {row['importance']}")
+    st.write(f"🌐 Source: {row['source']}")
+    st.write(f"🔗 {row['link']}")
+
+    st.markdown("---")
+
+# Raw data
+st.write("### Data Table")
+st.dataframe(filtered_df)
+

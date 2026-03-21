@@ -1,0 +1,8 @@
+streamlit
+pandas
+requests
+feedparser
+schedule
+newspaper3k
+lxml
+lxml_html_clean
