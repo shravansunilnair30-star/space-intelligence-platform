@@ -1,9 +1,18 @@
 import sqlite3
+import os
 
-DB_PATH = "/tmp/space_news.db"   # 🔥 FORCE THIS
+# Detect environment
+if os.name == "nt":  # Windows
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_DIR = os.path.join(BASE_DIR, "data")
+    os.makedirs(DB_DIR, exist_ok=True)
+    DB_PATH = os.path.join(DB_DIR, "space_news.db")
+else:
+    DB_PATH = "/tmp/space_news.db"  # Render/Linux
 
 
 def connect_db():
+    print("DB PATH:", DB_PATH)  # debug (you can remove later)
     return sqlite3.connect(DB_PATH)
 
 
