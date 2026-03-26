@@ -1,18 +1,9 @@
-import sqlite3
-import pandas as pd
 import os
 
 from crawler import get_articles
 from notifier import send_message
-from database import create_table, article_exists, save_article
+from database import create_table, save_article
 from analyzer import get_importance, generate_insight, classify_topic
-
-
-# -------------------------------
-# DATABASE PATH
-# -------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "space_news.db")
 
 
 # -------------------------------
@@ -50,10 +41,8 @@ def run_once():
             if not title:
                 continue
 
-            if article_exists(title):
-                continue
-
-            text = title
+            # No existence check needed anymore ✅
+            text = title  # (replace later if you fetch full content)
 
             importance = get_importance(title)
             topic = classify_topic(title)

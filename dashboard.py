@@ -1,10 +1,9 @@
 import streamlit as st
-import sqlite3
 import pandas as pd
-import os
 from deep_translator import GoogleTranslator
 
 from main import run_once
+from database import connect_db, create_table
 
 
 # -------------------------------
@@ -14,6 +13,17 @@ st.set_page_config(page_title="Space Intelligence Platform", layout="wide")
 
 st.title("🚀 Space Intelligence Platform")
 st.write("AI-powered real-time space industry insights")
+
+
+# -------------------------------
+# INIT (SAFE)
+# -------------------------------
+create_table()
+
+# Run only once per session (prevents infinite reruns)
+if "initialized" not in st.session_state:
+    run_once()
+    st.session_state.initialized = True
 
 
 # -------------------------------
@@ -40,6 +50,7 @@ with col1:
         with st.spinner("Fetching latest space news..."):
             count = run_once()
         st.success(f"✅ {count} new articles added")
+        st.cache_data.clear()   # 🔥 refresh cached DB
         st.rerun()
 
 with col2:
@@ -47,13 +58,17 @@ with col2:
 
 
 # -------------------------------
-# DATABASE
+# LOAD DATA (CACHED)
 # -------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "space_news.db")
+@st.cache_data
+def load_data():
+    conn = connect_db()
+    df = pd.read_sql("SELECT * FROM articles", conn)
+    conn.close()
+    return df
 
-conn = sqlite3.connect(DB_PATH)
-df = pd.read_sql("SELECT * FROM articles", conn)
+
+df = load_data()
 
 
 # -------------------------------
@@ -113,7 +128,7 @@ for _, row in filtered_df[filtered_df["importance"] == "HIGH"].head(5).iterrows(
     st.markdown(f"🔥 **{title}**")
     st.write(f"📅 {formatted_date}")
     st.write(f"📊 Topic: {row['topic']}")
-    st.write(f"🔗 {row['link']}")
+    st.markdown(f"[🔗 Read more]({row['link']})")
     st.markdown("---")
 
 
@@ -140,7 +155,7 @@ for _, row in filtered_df.head(50).iterrows():
     st.write(f"📅 {formatted_date}")
     st.write(f"📊 Topic: {row['topic']}")
     st.write(f"⚡ Importance: {row['importance']}")
-    st.write(f"🔗 {row['link']}")
+    st.markdown(f"[🔗 Read more]({row['link']})")
     st.markdown("---")
 
 

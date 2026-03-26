@@ -1,8 +1,6 @@
 import sqlite3
-import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "data", "space_news.db")
+DB_PATH = "/tmp/space_news.db"   # 🔥 FORCE THIS
 
 
 def connect_db():
@@ -15,7 +13,7 @@ def create_table():
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS articles(
-        title TEXT,
+        title TEXT PRIMARY KEY,
         link TEXT,
         source TEXT,
         content TEXT,
@@ -29,25 +27,25 @@ def create_table():
     conn.close()
 
 
-def article_exists(title):
-    conn = connect_db()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT 1 FROM articles WHERE title=?", (title,))
-    result = cursor.fetchone()
-
-    conn.close()
-    return result is not None
-
-
 def save_article(title, link, source, content, importance, topic, published):
     conn = connect_db()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "INSERT INTO articles VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (title, link, source, content, importance, topic, published)
-    )
+    cursor.execute("""
+    INSERT OR IGNORE INTO articles 
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (title, link, source, content, importance, topic, published))
 
     conn.commit()
     conn.close()
+
+
+def get_all_articles():
+    conn = connect_db()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM articles")
+    data = cursor.fetchall()
+
+    conn.close()
+    return data
